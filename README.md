@@ -13,7 +13,7 @@
 |---------------|:------------------------|
 
 ## Linux users
-Go to the [Downloading from our repo](#downloading-from-our-repo-for-developerslinux-users)
+Go to the [Downloading from our repo](#downloading-from-our-repo-for-developerslinux-users) section.
 
 ## macOS users
 > Please visit [DeskTranslate-Mac](https://github.com/DeskTranslate/DeskTranslate-Mac) for installation instructions for macOS
