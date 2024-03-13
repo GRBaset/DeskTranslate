@@ -123,7 +123,7 @@ class Ui_MainWindow(object):
         self.worker = None
 
         myappid = u'DeskTranslate.version1.1'  # arbitrary string
-        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+        #ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(430, 275)

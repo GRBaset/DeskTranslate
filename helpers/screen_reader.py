@@ -4,14 +4,14 @@ import cv2
 import numpy as np
 import pytesseract
 import pyttsx3
-from PIL import ImageGrab
+import pyscreenshot as ImageGrab
 from PyQt6 import QtWidgets, QtCore, QtGui
 from deep_translator import (GoogleTranslator,
                              PonsTranslator,
                              MyMemoryTranslator,
                              LingueeTranslator)
 
-pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+#pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
 
 class Worker(QtCore.QObject):
