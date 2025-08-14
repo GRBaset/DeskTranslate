@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 import pytesseract
 import pyttsx3
-import pyscreenshot as ImageGrab
+from PIL import ImageGrab
 from PyQt6 import QtWidgets, QtCore, QtGui
 from deep_translator import (GoogleTranslator,
                              PonsTranslator,
@@ -19,10 +19,15 @@ class Worker(QtCore.QObject):
     def __init__(self, snip_window, image_lang_code, trans_lang_code, is_text2speech_enabled, ui, translator_engine,
                  img_lang, trans_lang):
         super().__init__()
-        self.x1 = min(snip_window.begin.x(), snip_window.end.x())
-        self.y1 = min(snip_window.begin.y(), snip_window.end.y())
-        self.x2 = max(snip_window.begin.x(), snip_window.end.x())
-        self.y2 = max(snip_window.begin.y(), snip_window.end.y())
+        img = ImageGrab.grab()
+        logical_width = snip_window.rect.width()
+        physical_width = img.getdata().size[0]
+        pixel_ratio = physical_width / logical_width
+
+        self.x1 = min(snip_window.begin.x(), snip_window.end.x()) * pixel_ratio
+        self.y1 = min(snip_window.begin.y(), snip_window.end.y()) * pixel_ratio
+        self.x2 = max(snip_window.begin.x(), snip_window.end.x()) * pixel_ratio
+        self.y2 = max(snip_window.begin.y(), snip_window.end.y()) * pixel_ratio
         self.image_lang_code = image_lang_code
         self.trans_lang_code = trans_lang_code
         self.is_text2speech_enabled = is_text2speech_enabled
@@ -92,13 +97,13 @@ class Worker(QtCore.QObject):
             time.sleep(1)
 
 
-class MyWidget(QtWidgets.QWidget):
+class MyWidget(QtWidgets.QWidget): 
     def __init__(self):
         super().__init__()
         screen = QtWidgets.QApplication.primaryScreen()
-        rect = screen.availableGeometry()
-        screen_width = rect.width()
-        screen_height = rect.height()
+        self.rect = screen.availableGeometry()
+        screen_width = self.rect.width()
+        screen_height = self.rect.height()
         self.setGeometry(0, 0, screen_width, screen_height)
         self.setWindowTitle(' ')
         self.begin = QtCore.QPointF() 
@@ -106,17 +111,14 @@ class MyWidget(QtWidgets.QWidget):
         self.setWindowOpacity(0.3)
         self.setAttribute(QtCore.Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setWindowFlags(QtCore.Qt.WindowType.FramelessWindowHint)
-        self.show()
+        self.showFullScreen()
 
     def paintEvent(self, event):
-        screen = QtWidgets.QApplication.primaryScreen()
-        rect = screen.availableGeometry()
-
         qp = QtGui.QPainter(self)
         qp.setPen(QtGui.QPen(QtGui.QColor('black'), 3))
         qp.setBrush(QtGui.QColor(128, 128, 255, 128))
         qp.setOpacity(0.5)
-        qp.drawRect(rect)
+        qp.drawRect(self.rect)
         qp.setOpacity(1.0)
         qp.drawRect(QtCore.QRectF(self.begin, self.end))
 
