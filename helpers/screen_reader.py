@@ -9,7 +9,8 @@ from PyQt6 import QtWidgets, QtCore, QtGui
 from deep_translator import (GoogleTranslator,
                              PonsTranslator,
                              MyMemoryTranslator,
-                             LingueeTranslator)
+                             LingueeTranslator,
+                             LibreTranslator)
 
 #pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
@@ -100,25 +101,32 @@ class MyWidget(QtWidgets.QWidget):
         screen_height = rect.height()
         self.setGeometry(0, 0, screen_width, screen_height)
         self.setWindowTitle(' ')
-        self.begin = QtCore.QPoint()
-        self.end = QtCore.QPoint()
+        self.begin = QtCore.QPointF() 
+        self.end = QtCore.QPointF()
         self.setWindowOpacity(0.3)
+        self.setAttribute(QtCore.Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setWindowFlags(QtCore.Qt.WindowType.FramelessWindowHint)
         self.show()
 
     def paintEvent(self, event):
+        screen = QtWidgets.QApplication.primaryScreen()
+        rect = screen.availableGeometry()
+
         qp = QtGui.QPainter(self)
         qp.setPen(QtGui.QPen(QtGui.QColor('black'), 3))
         qp.setBrush(QtGui.QColor(128, 128, 255, 128))
-        qp.drawRect(QtCore.QRect(self.begin, self.end))
+        qp.setOpacity(0.5)
+        qp.drawRect(rect)
+        qp.setOpacity(1.0)
+        qp.drawRect(QtCore.QRectF(self.begin, self.end))
 
     def mousePressEvent(self, event):
-        self.begin = event.pos()
+        self.begin = event.globalPosition()
         self.end = self.begin
         self.update()
 
     def mouseMoveEvent(self, event):
-        self.end = event.pos()
+        self.end = event.globalPosition()
         self.update()
 
     def mouseReleaseEvent(self, event):
