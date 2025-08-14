@@ -1,4 +1,4 @@
-# Welcome to DeskTranslate!
+# Welcome to DeskTranslate! (Linux support added)
 
 ![](image/DeskTranslate.gif)
 
@@ -12,6 +12,8 @@
 |:information_source:  | [Devpost Link](https://devpost.com/software/desktranslate)   |
 |---------------|:------------------------|
 
+## Linux users
+Go to the [Downloading from our repo](#downloading-from-our-repo-for-developerslinux-users) section.
 
 ## macOS users
 > Please visit [DeskTranslate-Mac](https://github.com/DeskTranslate/DeskTranslate-Mac) for installation instructions for macOS
@@ -46,7 +48,7 @@ In total, 5 checkboxes need to be checked to use it for Japanese translation.
 
 > Apply the above steps for the languages required
 
-### Downloading from our repo [for developers]
+### Downloading from our repo [for developers/Linux users]
 
 ![](images/githubDownload.png)
 
