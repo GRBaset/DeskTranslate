@@ -101,7 +101,8 @@ class Ui_MainWindow(object):
         self.opacity_2_label.setText(str(new_opacity_value))
 
         try:
-            self.ui.setWindowOpacity(self.opacity_slider.value() / 100)
+            # self.ui.setWindowOpacity(self.opacity_slider.value() / 100)
+            self.ui.update()
         except:
             print("Trying to edit opacity")
 
@@ -576,7 +577,7 @@ if __name__ == "__main__":
     # SplashScreenWindow
     splash_screen_window = splashscreen.SplashScreenWindow(MainWindow)
     splash_screen_window.show()
-    QTimer.singleShot(2500, splash_screen_window.close)
+    QTimer.singleShot(25, splash_screen_window.close)
 
     # Run the application!
     #sys.exit(app.exec_())

@@ -14,6 +14,7 @@ class Ui_translateWindow(QtWidgets.QMainWindow):
         super().__init__()
         self.setObjectName("translateWindow")
         self.resize(800, 161)
+        self.opacity_slider = opacity_slider
 
         self.centralwidget = QtWidgets.QWidget(self)
         self.centralwidget.setObjectName("centralwidget")
@@ -56,7 +57,17 @@ class Ui_translateWindow(QtWidgets.QMainWindow):
             QtCore.Qt.WindowType.WindowCloseButtonHint |
             QtCore.Qt.WindowType.WindowStaysOnTopHint
         )
-        self.setWindowOpacity(opacity_slider.value() / 100)
+
+        #self.setWindowOpacity(opacity_slider.value() / 100)
+        self.setAttribute(QtCore.Qt.WidgetAttribute.WA_TranslucentBackground)
+
+    def paintEvent(self, event):
+        screen = QtWidgets.QApplication.primaryScreen()
+        qp = QtGui.QPainter(self)
+        qp.setPen(QtGui.QPen(QtGui.QColor('black'), 3))
+        qp.setBrush(QtGui.QColor(128, 128, 128))
+        qp.setOpacity(self.opacity_slider.value() / 100)
+        qp.drawRect(self.window().geometry())
 
     def set_worker(self, worker):
         self.worker = worker
