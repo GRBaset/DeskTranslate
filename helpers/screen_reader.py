@@ -17,7 +17,7 @@ from deep_translator import (GoogleTranslator,
 
 class Worker(QtCore.QObject):
     def __init__(self, snip_window, image_lang_code, trans_lang_code, is_text2speech_enabled, ui, translator_engine,
-                 img_lang, trans_lang):
+                 libre_url, libre_api, img_lang, trans_lang):
         super().__init__()
         img = ImageGrab.grab()
         logical_width = snip_window.rect.width()
@@ -37,6 +37,8 @@ class Worker(QtCore.QObject):
         self.current_extracted_text = None
         self.img_lang = img_lang.lower()
         self.trans_lang = trans_lang.lower()
+        self.libre_url = libre_url
+        self.libre_api = libre_api
 
     def stop_running(self):
         self.running = False
@@ -80,13 +82,22 @@ class Worker(QtCore.QObject):
                         print(f"TRANSLATED TEXT: [{translated_text}]")
                     except Exception:
                         print("unsupported by LingueeTranslator")
-                else:
+                elif self.translator_engine == "MyMemoryTranslator":
                     try:
                         translated_text = MyMemoryTranslator(source=self.img_lang, target=self.trans_lang).translate(
                             new_extracted_text)
                         print(f"TRANSLATED TEXT: [{translated_text}]")
                     except Exception:
                         print("unsupported by MyMemoryTranslator")
+                elif self.translator_engine == "LibreTranslator":
+                    try:
+                        translated_text = LibreTranslator(source="auto", target=self.trans_lang_code, custom_url=self.libre_url, api_key=self.libre_api).translate(
+                            new_extracted_text)
+                        print(f"TRANSLATED TEXT: [{translated_text}]")
+                    except Exception:
+                        print("unsupported by LibreTranslator")
+                else:
+                    raise Exception("unsupported translation engine")
 
                 self.ui.translated_text_label.setText(translated_text)
                 if self.is_text2speech_enabled:

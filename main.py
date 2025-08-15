@@ -45,7 +45,9 @@ for i in range(0, length1):
 
 
 class Ui_MainWindow(object):
-    translator_engine = "GoogleTranslator"
+    translator_engine = "LibreTranslator"
+    libre_url = "http://localhost:5000/"
+    libre_api = "null"
 
     def on_click_select_borders(self):
         global borders_selected
@@ -79,6 +81,7 @@ class Ui_MainWindow(object):
                              img_code, trans_code,
                              is_text2speech_enabled,
                              self.ui, self.translator_engine,
+                             self.libre_url, self.libre_api,
                              img_lang, trans_lang)
         self.ui.set_worker(self.worker)
         self.thread = Thread(target=self.worker.run)
@@ -117,6 +120,26 @@ class Ui_MainWindow(object):
 
     def on_click_engine_changed(self, value):
         self.translator_engine = value
+
+        if self.translator_engine == "LibreTranslator":
+            self.libre_url_label.show()
+            self.libre_url_textbox.show()
+            self.libre_api_label.show()
+            self.libre_api_textbox.show()
+        else:
+            self.libre_url_label.hide()
+            self.libre_url_textbox.hide()
+            self.libre_api_label.hide()
+            self.libre_api_textbox.hide()
+
+    def on_click_libre_url_changed(self, value):
+        self.libre_url = value
+
+    def on_click_libre_api_changed(self, value):
+        if value == "":
+            self.libre_api = "null" # WORKAROUND: deep_translate requires API key even if not necessary
+        else:
+            self.libre_api = value
 
     def setupUi(self, MainWindow):
         self.thread = None
@@ -340,14 +363,55 @@ class Ui_MainWindow(object):
 
         self.engine_dropdown = QtWidgets.QComboBox(self.tab_settings)
         self.engine_dropdown.setMaximumSize(QtCore.QSize(374, 16777215))
-        self.engine_dropdown.setCurrentText("")
         self.engine_dropdown.setObjectName("engine_dropdown")
         self.gridLayout_3.addWidget(self.engine_dropdown, 3, 1, 1, 1)
 
         # dropdown for font size
-        translator_engines = ["GoogleTranslator", "PonsTranslator", "LingueeTranslator", "MyMemoryTranslator"]
+        translator_engines = ["GoogleTranslator", "PonsTranslator", "LingueeTranslator", "MyMemoryTranslator", "LibreTranslator"]
         self.engine_dropdown.addItems(list(map(str, translator_engines)))
+        self.engine_dropdown.setCurrentText(self.translator_engine)
         self.engine_dropdown.currentTextChanged.connect(self.on_click_engine_changed)
+
+        self.libre_url_label = QtWidgets.QLabel(self.tab_settings)
+        self.libre_url_label.setMaximumSize(QtCore.QSize(74, 16777215))
+        font = QtGui.QFont()
+        font.setPointSize(12)
+        self.libre_url_label.setFont(font)
+        self.libre_url_label.setObjectName("libre_url_label")
+        self.gridLayout_3.addWidget(self.libre_url_label, 4, 0, 1, 1)
+
+        self.libre_url_textbox = QtWidgets.QLineEdit(self.tab_settings)
+        self.libre_url_textbox.setMaximumSize(QtCore.QSize(374, 16777215))
+        self.libre_url_textbox.setText(self.libre_url)
+        self.libre_url_textbox.setObjectName("libre_url_textbox")
+        self.gridLayout_3.addWidget(self.libre_url_textbox, 4, 1, 1, 1)
+        self.libre_url_textbox.textChanged.connect(self.on_click_libre_url_changed)
+
+        self.libre_api_label = QtWidgets.QLabel(self.tab_settings)
+        self.libre_api_label.setMaximumSize(QtCore.QSize(74, 16777215))
+        font = QtGui.QFont()
+        font.setPointSize(12)
+        self.libre_api_label.setFont(font)
+        self.libre_api_label.setObjectName("libre_api_label")
+        self.gridLayout_3.addWidget(self.libre_api_label, 5, 0, 1, 1)
+
+        self.libre_api_textbox = QtWidgets.QLineEdit(self.tab_settings)
+        self.libre_api_textbox.setMaximumSize(QtCore.QSize(374, 16777215))
+        self.libre_api_textbox.setObjectName("libre_api_textbox")
+        self.libre_api_textbox.setPlaceholderText("None")
+        self.gridLayout_3.addWidget(self.libre_api_textbox, 5, 1, 1, 1)
+        if self.libre_api == "null":
+            self.libre_api_textbox.setText("") # WORKAROUND
+        else:
+            self.libre_api_textbox.setText(self.libre_api)
+
+        if self.translator_engine != "LibreTranslator":
+            self.libre_url_label.hide()
+            self.libre_url_textbox.hide()
+            self.libre_api_label.hide()
+            self.libre_api_textbox.hide()
+
+        self.libre_api_textbox.textChanged.connect(self.on_click_libre_api_changed)
 
         self.text_to_speech_label = QtWidgets.QLabel(self.tab_settings)
         self.text_to_speech_label.setMaximumSize(QtCore.QSize(90, 16777215))
@@ -355,14 +419,14 @@ class Ui_MainWindow(object):
         font.setPointSize(12)
         self.text_to_speech_label.setFont(font)
         self.text_to_speech_label.setObjectName("text_to_speech_label")
-        self.gridLayout_3.addWidget(self.text_to_speech_label, 4, 0, 1, 1)
+        self.gridLayout_3.addWidget(self.text_to_speech_label, 6, 0, 1, 1)
 
         self.checkBox = QtWidgets.QCheckBox(self.tab_settings)
         font = QtGui.QFont()
         font.setPointSize(12)
         self.checkBox.setFont(font)
         self.checkBox.setObjectName("checkBox")
-        self.gridLayout_3.addWidget(self.checkBox, 4, 1, 1, 2)
+        self.gridLayout_3.addWidget(self.checkBox, 6, 1, 1, 2)
 
         self.verticalLayout.addLayout(self.gridLayout_3)
         self.gridLayout_4.addLayout(self.verticalLayout, 0, 0, 1, 1)
@@ -477,6 +541,8 @@ class Ui_MainWindow(object):
         self.select_color_btn.setText(_translate("MainWindow", "Select color"))
         self.color_label.setText(_translate("MainWindow", "Color"))
         self.engine_label.setText(_translate("MainWindow", "Engine"))
+        self.libre_url_label.setText(_translate("MainWindow", "URL"))
+        self.libre_api_label.setText(_translate("MainWindow", "API key"))
         self.text_to_speech_label.setText(_translate("MainWindow", "Dictation"))
         self.checkBox.setText(_translate("MainWindow", "Enable text to speech"))
         self.about_us_label.setText(_translate("MainWindow",
