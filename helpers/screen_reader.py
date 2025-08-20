@@ -38,7 +38,7 @@ class Worker(QtCore.QObject):
         self.img_lang = img_lang.lower()
         self.trans_lang = trans_lang.lower()
         self.libre_url = libre_url
-        self.libre_api = libre_api
+        self.libre_api = libre_api if libre_api != "" else "null" # WORKAROUND: deep_translate requires API key even if not necessary
 
     def stop_running(self):
         self.running = False

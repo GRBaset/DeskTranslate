@@ -2,6 +2,7 @@
 
 import sys
 import ctypes
+import json
 from threading import Thread
 
 from PyQt6 import QtCore, QtGui, QtWidgets
@@ -9,7 +10,46 @@ from PyQt6.QtCore import QTimer
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import QColorDialog, QSizePolicy, QMessageBox, QLabel, QApplication
 
+from numpy import from_dlpack
+from pydantic import BaseModel
+
+from pydantic_settings import (
+    BaseSettings,
+    PydanticBaseSettingsSource,
+    SettingsConfigDict,
+    JsonConfigSettingsSource,
+)
+
 from helpers import screen_reader, splashscreen, translate
+
+class Settings(BaseSettings):
+    translator_engine: str = "LibreTranslator"
+    libre_url: str = "http://localhost:5000/"
+    libre_api: str = ""
+    font_size: int = 8
+    opacity: int = 100
+    color_hex: str = "#000000"
+    from_lang: str = "English"
+    to_lang: str = "English"
+
+    model_config = SettingsConfigDict(json_file='config.json')
+
+    @classmethod
+    def settings_customise_sources(
+        cls,
+        settings_cls: type[BaseSettings],
+        init_settings: PydanticBaseSettingsSource,
+        env_settings: PydanticBaseSettingsSource,
+        dotenv_settings: PydanticBaseSettingsSource,
+        file_secret_settings: PydanticBaseSettingsSource,
+    ) -> tuple[PydanticBaseSettingsSource, ...]:
+        return (JsonConfigSettingsSource(settings_cls),)
+
+    def save(self):
+        with open("config.json", "w") as f:
+            json.dump(self.model_dump(), f)
+
+config = Settings()
 
 with open("languageLists/fromLanguage.csv") as f:
     arr = [line.split(',') for line in f]
@@ -43,12 +83,8 @@ for i in range(0, length1):
     twoLetterCode = country[1].replace('\n', '')
     dict1[name] = twoLetterCode
 
-
+print(config.model_dump_json())
 class Ui_MainWindow(object):
-    translator_engine = "LibreTranslator"
-    libre_url = "http://localhost:5000/"
-    libre_api = "null"
-
     def on_click_select_borders(self):
         global borders_selected
         borders_selected = True
@@ -71,8 +107,8 @@ class Ui_MainWindow(object):
 
         self.ui = translate.Ui_translateWindow(self.opacity_slider)
         self.ui.show()
-        img_lang = self.frm_dropdown.currentText()
-        trans_lang = self.to_dropdown.currentText()
+        img_lang = config.from_lang
+        trans_lang = config.to_lang
         img_code = dict.get(img_lang)
         trans_code = dict1.get(trans_lang)
         print(img_code, trans_code)
@@ -80,8 +116,8 @@ class Ui_MainWindow(object):
         self.worker = screen_reader.Worker(snip_window,
                              img_code, trans_code,
                              is_text2speech_enabled,
-                             self.ui, self.translator_engine,
-                             self.libre_url, self.libre_api,
+                             self.ui, config.translator_engine,
+                             config.libre_url, config.libre_api,
                              img_lang, trans_lang)
         self.ui.set_worker(self.worker)
         self.thread = Thread(target=self.worker.run)
@@ -89,6 +125,9 @@ class Ui_MainWindow(object):
         print("Launched!")
 
     def on_click_font_size_changed(self, value):
+        config.font_size = int(value)
+        config.save()
+
         font = QtGui.QFont()
         font.setPointSize(int(value))
         try:
@@ -98,6 +137,10 @@ class Ui_MainWindow(object):
 
     def on_click_opacity_changed(self):
         new_opacity_value = self.opacity_slider.value()
+
+        config.opacity = new_opacity_value
+        config.save()
+
         self.opacity_2_label.setText(str(new_opacity_value))
 
         try:
@@ -113,16 +156,27 @@ class Ui_MainWindow(object):
             self.color_changed(newColor)
 
     def color_changed(self, color):
+        config.color_hex = color.name()
+        config.save()
         print(color.name())
         try:
             self.ui.translated_text_label.setStyleSheet("color: " + color.name() + ";")
         except:
             print("Trying to change color")
 
-    def on_click_engine_changed(self, value):
-        self.translator_engine = value
+    def on_click_from_lang_changed(self, value):
+        config.from_lang = value
+        config.save()
 
-        if self.translator_engine == "LibreTranslator":
+    def on_click_to_lang_changed(self, value):
+        config.to_lang = value
+        config.save()
+
+    def on_click_engine_changed(self, value: str):
+        config.translator_engine = value
+        config.save()
+
+        if config.translator_engine == "LibreTranslator":
             self.libre_url_label.show()
             self.libre_url_textbox.show()
             self.libre_api_label.show()
@@ -134,13 +188,12 @@ class Ui_MainWindow(object):
             self.libre_api_textbox.hide()
 
     def on_click_libre_url_changed(self, value):
-        self.libre_url = value
+        config.libre_url = value
+        config.save()
 
     def on_click_libre_api_changed(self, value):
-        if value == "":
-            self.libre_api = "null" # WORKAROUND: deep_translate requires API key even if not necessary
-        else:
-            self.libre_api = value
+        config.libre_api = value
+        config.save()
 
     def setupUi(self, MainWindow):
         self.thread = None
@@ -209,6 +262,8 @@ class Ui_MainWindow(object):
 
         # add language list for original text
         self.frm_dropdown.addItems(list_frm2)
+        self.frm_dropdown.setCurrentText(config.from_lang)
+        self.frm_dropdown.currentTextChanged.connect(self.on_click_from_lang_changed)
 
         font = QtGui.QFont()
         font.setPointSize(12)
@@ -241,6 +296,8 @@ class Ui_MainWindow(object):
 
         # add language list for translation text
         self.to_dropdown.addItems(list_frm1)
+        self.to_dropdown.setCurrentText(config.to_lang)
+        self.to_dropdown.currentTextChanged.connect(self.on_click_to_lang_changed)
 
         self.horizontalLayout.addWidget(self.select_borders_btn)
         self.translate_btn = QtWidgets.QPushButton(self.tab_translate)
@@ -370,7 +427,7 @@ class Ui_MainWindow(object):
         # dropdown for font size
         translator_engines = ["GoogleTranslator", "PonsTranslator", "LingueeTranslator", "MyMemoryTranslator", "LibreTranslator"]
         self.engine_dropdown.addItems(list(map(str, translator_engines)))
-        self.engine_dropdown.setCurrentText(self.translator_engine)
+        self.engine_dropdown.setCurrentText(config.translator_engine)
         self.engine_dropdown.currentTextChanged.connect(self.on_click_engine_changed)
 
         self.libre_url_label = QtWidgets.QLabel(self.tab_settings)
@@ -383,7 +440,7 @@ class Ui_MainWindow(object):
 
         self.libre_url_textbox = QtWidgets.QLineEdit(self.tab_settings)
         self.libre_url_textbox.setMaximumSize(QtCore.QSize(374, 16777215))
-        self.libre_url_textbox.setText(self.libre_url)
+        self.libre_url_textbox.setText(config.libre_url)
         self.libre_url_textbox.setObjectName("libre_url_textbox")
         self.gridLayout_3.addWidget(self.libre_url_textbox, 4, 1, 1, 1)
         self.libre_url_textbox.textChanged.connect(self.on_click_libre_url_changed)
@@ -401,12 +458,9 @@ class Ui_MainWindow(object):
         self.libre_api_textbox.setObjectName("libre_api_textbox")
         self.libre_api_textbox.setPlaceholderText("None")
         self.gridLayout_3.addWidget(self.libre_api_textbox, 5, 1, 1, 1)
-        if self.libre_api == "null":
-            self.libre_api_textbox.setText("") # WORKAROUND
-        else:
-            self.libre_api_textbox.setText(self.libre_api)
+        self.libre_api_textbox.setText(config.libre_api)
 
-        if self.translator_engine != "LibreTranslator":
+        if config.translator_engine != "LibreTranslator":
             self.libre_url_label.hide()
             self.libre_url_textbox.hide()
             self.libre_api_label.hide()

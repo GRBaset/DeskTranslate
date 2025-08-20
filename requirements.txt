@@ -11,3 +11,5 @@ pyperclip==1.8.1
 PyQt6
 PyQt6-sip
 PyRect==0.1.4
+pydantic
+pydantic-settings
